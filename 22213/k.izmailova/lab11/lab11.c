@@ -1,33 +1,39 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdio.h>
+#include <sys/wait.h>
 
-int execvpe(char* file_name, char* argv[], char* envp[])
-{
-    int execvp_result = 0;
-    extern char** environ;
-    char** old_environ;
-    old_environ = environ;
+extern char** environ;
+
+int execvpe(char* filename, char* arg[], char* envp[]) {
+    char** ptr;
     environ = envp;
-    execvp_result = execvp(file_name, argv);
-    if (execvp_result == -1)
-    {
-        environ = old_environ;
-        perror("execvp error\n");
-        return -1;
+
+    printf("New environ:\n");
+    for (ptr = environ; *ptr != NULL; ptr++) {
+        printf("%s\n", *ptr);
     }
-    return 0;
+
+    execvp(filename, arg);
+    return -1;
 }
 
-int main(int argc, char* argv[], char* envp[])
-{
-    extern char** environ;
-    char** new_env = (char**)malloc(19 * sizeof(char*));
-    for (int i = 0; i < 17; i++)
-    {
-        new_env[i] = environ[i];
+int main(int argc, char* argv[]) {
+    pid_t pid = fork();
+    if (pid == -1) { return 1; }
+
+    if (pid == 0) {
+        // Child process
+        char* args[] = { "date", NULL };
+        execvpe("date", args, argv + 1);
+        return 1;
     }
-    new_env[17] = "ANSWER=42";
-    new_env[18] = NULL;
-    return execvpe(argv[1], &argv[1], new_env);
+    else {
+        // Parent process
+        if (wait(NULL) != -1) {
+            printf("\nChild process (pid: %d) finished\n", pid);
+        }
+    }
+
+    return 0;
 }
