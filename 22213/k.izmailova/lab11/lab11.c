@@ -6,33 +6,23 @@
 extern char** environ;
 
 int execvpe(char* filename, char* arg[], char* envp[]) {
-    char** ptr;
+    char** ptr = environ;
     environ = envp;
-
-    printf("New environ:\n");
-    for (ptr = environ; *ptr != NULL; ptr++) {
-        printf("%s\n", *ptr);
-    }
-
     execvp(filename, arg);
+    environ = ptr;
     return -1;
 }
 
 int main(int argc, char* argv[]) {
-    pid_t pid = fork();
-    if (pid == -1) { return 1; }
-
-    if (pid == 0) {
-        // Child process
-        char* args[] = { "date", NULL };
-        execvpe("date", args, argv + 1);
-        return 1;
+    if (argc < 2) {
+        fprintf(stderr, "No executed file\n");
+        exit(EXIT_FAILURE);
     }
-    else {
-        // Parent process
-        if (wait(NULL) != -1) {
-            printf("\nChild process (pid: %d) finished\n", pid);
-        }
+    char* nenv[] = { "NAME=value","nextname=nextvalue","HOME=/xyz","PATH=.",(char*)0 };
+
+    if (execvpe(argv[1], &argv[1], nenv) == -1) {
+        perror("execvpe");
+        exit(EXIT_FAILURE);
     }
 
     return 0;
