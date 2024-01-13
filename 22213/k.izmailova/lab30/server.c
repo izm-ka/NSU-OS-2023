@@ -16,10 +16,10 @@ int main() {
 
     struct sockaddr_un addr; // UNIX domain socket address
     memset(&addr, 0, sizeof(addr)); // Initialize memory with zero values, ensuring the address structure is initialized before setting specific values.
-    addr.sun_family = AF_UNIX;
-    char* socketPath = "./socket";
-    strcpy(addr.sun_path, socketPath);
-    unlink(socketPath);
+    addr.sun_family = AF_UNIX; // Sets the address family for the UNIX socket.
+    char* socketPath = "./socket"; // Defines the path to the file that will be used as the address for the UNIX socket
+    strcpy(addr.sun_path, socketPath); // Copies the socket file path into the sockaddr_un structure
+    unlink(socketPath); // Deletes the previous socket file with the specified path to avoid conflicts.
 
     // Bind the network address of the computer to the socket identifier
     if (bind(sfd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
@@ -51,19 +51,25 @@ int main() {
         }
 
         printf("the connection is established\n");
-        int rc;
-        char buf[BUFSIZ];
+        int rc; // Variable to store the result of the read operation.
+        char buf[BUFSIZ]; // Buffer to store data.
 
-        // Read data from the client socket into a buffer and convert characters to uppercase
+        // Infinite loop for reading data from the client socket (cfd) into the buffer (buf).
+        // The read function returns the number of bytes successfully read from the socket.
         while ((rc = read(cfd, buf, BUFSIZ)) > 0) {
+            // converting to uppercase and print to the standard output using putchar.
             for (int i = 0; i < rc; ++i) {
                 putchar(toupper(buf[i]));
             }
         }
+
+        // If the result of the read operation is -1, it indicates an error during reading.
         if (rc == -1) {
             perror("read error");
             exit(1);
         }
+
+        // If the result of the read operation is 0, it means the connection was closed by the client.
         if (rc == 0) {
             printf("the connection was closed\n");
             close(cfd);
