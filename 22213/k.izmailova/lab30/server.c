@@ -23,6 +23,7 @@ int main() {
 
     // Bind the network address of the computer to the socket identifier
     if (bind(sfd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
+        close(sfd);
         perror("bind error");
         exit(1);
     }
@@ -34,6 +35,7 @@ int main() {
     * The XSI specification defines the minimum upper limit on the queue length as 5.
     */
     if (listen(sfd, 5) == -1) {
+        close(sfd);
         perror("listen error");
         exit(1);
     }
@@ -46,6 +48,7 @@ int main() {
         * If an error occurs, the code prints an error message using perror and exits the program with an error code.
         */
         if ((cfd = accept(sfd, NULL, NULL)) == -1) {
+            close(sfd);
             perror("accept error");
             exit(1);
         }
@@ -59,12 +62,14 @@ int main() {
         while ((rc = read(cfd, buf, BUFSIZ)) > 0) {
             // converting to uppercase and print to the standard output using putchar.
             for (int i = 0; i < rc; ++i) {
-                putchar(toupper(buf[i]));
+                putchar(toupper(buf[i])); //как оптимизировать. 
             }
         }
 
         // If the result of the read operation is -1, it indicates an error during reading.
         if (rc == -1) {
+            close(sfd);
+            close(cfd);
             perror("read error");
             exit(1);
         }
@@ -73,8 +78,11 @@ int main() {
         if (rc == 0) {
             printf("the connection was closed\n");
             close(cfd);
+            close(sfd);
+            unlink(socketPath);
             return 0;
         }
     }
 }
-//что будет после запуска сервера и его закрытия если запустить другую программу которой понадобится сокет
+
+//закрывать дескрипторы во время ошибок. что такое сокеты и как они работают
