@@ -79,7 +79,6 @@ int main() {
             printf("the connection was closed\n");
             close(cfd);
             close(sfd);
-            unlink(socketPath);
             return 0;
         }
     }
