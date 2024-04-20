@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/wait.h>
 
 extern char** environ;
@@ -11,7 +12,7 @@ int execvpe(char* filename, char* arg[], char* envp[]) {
 
     for (int i = 0; envp[i] != NULL; i++) {
         if (strncmp(envp[i], "PATH=", 5) == 0) {
-            char* newPath = malloc(strlen(envp[i]) + 2)
+            char* newPath = malloc(strlen(envp[i]) + 2);
             if (newPath) {
                 sprintf(newPath, "%s.", envp[i]);
                 envp[i] = newPath;
