@@ -9,23 +9,8 @@ extern char** environ;
 int execvpe(char* filename, char* arg[], char* envp[]) {
     char** ptr = environ;
     environ = envp;
-
-    for (int i = 0; envp[i] != NULL; i++) {
-        if (strncmp(envp[i], "PATH=", 5) == 0) {
-            char* newPath = malloc(strlen(envp[i]) + 2);
-            if (newPath) {
-                sprintf(newPath, "%s.", envp[i]);
-                envp[i] = newPath;
-            }
-            break;
-        }
-    }
     execvp(filename, arg);
     environ = ptr;
-
-    if (newPath) {
-        free(newPath);
-    }
     return -1;
 }
 
@@ -34,7 +19,28 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "No executed file\n");
         exit(EXIT_FAILURE);
     }
+
+    char* oldPath = getenv("PATH");
+
+    if (oldPath == NULL) {
+        fprintf(stderr, "PATH not found in environment\n");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Old PATH: %s\n", oldPath);
+
+    char* newPath = malloc(strlen(oldPath) + 2);
+    if (newPath == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    sprintf(newPath, "%s.", oldPath);
+
+    printf("Modified PATH: %s\n", newPath);
+
     char* nenv[] = { "NAME=value","nextname=nextvalue","HOME=/xyz","PATH=.",(char*)0 };
+
 
     if (execvpe(argv[1], &argv[1], nenv) == -1) {
         perror("execvpe");
